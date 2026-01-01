@@ -1,0 +1,10 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: db-qdrant
+    ports:
+    - "6333:6333"
+    - "6334:6334"
+    restart: unless-stopped
+    volumes:
+    - ./qdrant_storage:/qdrant/storage

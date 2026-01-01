@@ -1,0 +1,229 @@
+---
+alwaysApply: true
+---
+# Project Rules for Cursor AI
+
+## Project Overview
+Full-stack application with FastAPI backend and React frontend using TypeScript.
+
+## Technology Stack
+
+### Backend
+- **Framework**: FastAPI (Python 3.11+)
+- **Database**: PostgreSQL with SQLAlchemy ORM
+- **Migrations**: Alembic
+- **Validation**: Pydantic v2
+- **Authentication**: JWT tokens
+- **Testing**: pytest, pytest-asyncio
+- **Code Quality**: ruff, black, mypy
+
+### Frontend
+- **Runtime**: Node.js 21
+- **Framework**: React 18+
+- **Language**: TypeScript 5+
+- **Build Tool**: Vite
+- **State Management**: React Query (TanStack Query)
+- **Routing**: React Router v6
+- **UI Components**: Chakra UI
+- **Forms**: React Hook Form + Zod
+- **Testing**: Vitest, Testing Library
+- **Code Quality**: ESLint, Prettier
+
+## Code Style Guidelines
+
+### Python (Backend)
+- init uv project 
+- Use async/await for all I/O operations
+- Follow PEP 8 with line length of 100 characters
+- Use type hints for all function parameters and return values
+- Organize imports: standard library, third-party, local
+- Use Pydantic models for request/response validation
+- Structure: `app/` directory with `api/`, `core/`, `models/`, `schemas/`, `services/`
+
+**Example Structure:**
+```
+backend/
+├── app/
+│   ├── api/
+│   │   ├── deps.py
+│   │   └── v1/
+│   │       ├── endpoints/
+│   │       │   ├── users.py
+│   │       │   └── auth.py
+│   │       └── router.py
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── security.py
+│   │   └── db.py
+│   ├── models/
+│   │   └── user.py
+│   ├── schemas/
+│   │   └── user.py
+│   ├── services/
+│   │   └── user_service.py
+│   └── main.py
+├── tests/
+├── alembic/
+└── requirements.txt
+```
+
+### TypeScript (Frontend)
+- Use functional components with hooks
+- Prefer `const` over `let`, never use `var`
+- Use explicit return types for functions
+- Organize imports: React, third-party, local components, types, styles
+- Use absolute imports with path aliases (`@/components`)
+- Structure: feature-based organization
+
+**Example Structure:**
+```
+frontend/
+├── src/
+│   ├── api/
+│   │   └── client.ts
+│   ├── components/
+│   │   ├── ui/
+│   │   └── layout/
+│   ├── features/
+│   │   └── auth/
+│   │       ├── components/
+│   │       ├── hooks/
+│   │       ├── types/
+│   │       └── api/
+│   ├── hooks/
+│   ├── lib/
+│   ├── pages/
+│   ├── types/
+│   └── main.tsx
+├── public/
+└── package.json
+```
+
+## API Design Principles
+
+### Backend Endpoints
+- Use RESTful conventions
+- Version API endpoints (`/api/v1/`)
+- Return consistent response structures
+- Use proper HTTP status codes
+- Implement pagination for list endpoints
+- Add OpenAPI documentation via FastAPI
+- use pydantic
+
+**Example Response Format:**
+```json
+{
+  "success": true,
+  "data": {},
+  "message": "Operation successful",
+  "errors": null
+}
+```
+
+### Frontend API Calls
+- Use React Query for all API interactions
+- Centralize API client configuration
+- Handle loading and error states consistently
+- Implement optimistic updates where appropriate
+- Use custom hooks for data fetching
+
+## Security Best Practices
+- Validate all inputs on both client and server
+- Use CORS middleware with specific origins
+- Implement rate limiting on API endpoints
+- Store sensitive data in environment variables
+- Use HTTPS in production
+- Sanitize user inputs to prevent XSS
+- Implement CSRF protection for state-changing operations
+- Use HTTPOnly cookies for refresh tokens
+
+## Error Handling
+
+### Backend
+- Use custom exception classes
+- Implement global exception handlers
+- Log errors with appropriate context
+- Return user-friendly error messages
+- Never expose internal error details
+
+### Frontend
+- Create error boundary components
+- Display user-friendly error messages
+- Log errors to monitoring service
+- Implement retry logic for failed requests
+- Show toast notifications for user feedback
+
+## Testing Requirements
+
+### Backend Tests
+- Aim for 80%+ code coverage
+- Write unit tests for business logic
+- Write integration tests for API endpoints
+- Use fixtures for test data
+- Mock external dependencies
+
+### Frontend Tests
+- Write unit tests for utility functions
+- Write component tests for UI components
+- Write integration tests for user flows
+- Mock API calls in tests
+- Test accessibility with axe
+
+## Performance Optimization
+
+### Backend
+- Use connection pooling for database
+- Implement caching with Redis where appropriate
+- Use background tasks for heavy operations
+- Optimize database queries (use indexes, avoid N+1)
+- Implement response compression
+
+### Frontend
+- Use code splitting and lazy loading
+- Optimize images (WebP format, lazy loading)
+- Implement virtual scrolling for long lists
+- Minimize bundle size (tree shaking)
+- Use React.memo for expensive components
+- Debounce/throttle frequent operations
+
+## Development Workflow
+- Use feature branches with descriptive names
+- Write meaningful commit messages (Conventional Commits)
+- Create PR templates with checklist
+- Require code review before merging
+- Run linters and tests in CI/CD pipeline
+- Use pre-commit hooks for code quality
+
+## Environment Variables
+
+### Backend (.env)
+```
+DATABASE_URL=postgresql://user:pass@localhost/dbname
+SECRET_KEY=your-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+CORS_ORIGINS=http://localhost:5173
+```
+
+### Frontend (.env)
+```
+VITE_API_URL=http://localhost:8000/api/v1
+VITE_APP_NAME=MyApp
+```
+
+## Documentation
+- Document all API endpoints with docstrings
+- Add JSDoc comments for complex functions
+- Maintain README with setup instructions
+- Document environment variables
+- Keep API documentation up to date
+
+## Code Review Checklist
+- [ ] Code follows style guidelines
+- [ ] Tests are included and passing
+- [ ] No console.logs or debug statements
+- [ ] Error handling is implemented
+- [ ] Security best practices followed
+- [ ] Performance considerations addressed
+- [ ] Documentation updated
+- [ ] Type safety maintained
