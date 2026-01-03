@@ -1,6 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
 from pydantic import HttpUrl
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.letter import (
     LetterFromUrlRequest,
     LetterFromTextRequest,
@@ -8,19 +9,21 @@ from app.schemas.letter import (
     CVUploadResponse
 )
 from app.services.letter import LetterService
+from app.database import get_db
 
 router = APIRouter()
 
-def get_letter_service() -> LetterService:
-    """Dependency to get LetterService instance"""
-    return LetterService()
+def get_letter_service(db: AsyncSession = Depends(get_db)) -> LetterService:
+    """Dependency to get LetterService instance with database session"""
+    return LetterService(db)
 
 
 @router.post("/url", response_model=LetterResponse)
 async def create_letter_from_url(
     url: str = Form(..., description="URL to extract content from"),
     source_id: int = Form(..., description="Source ID of the CV in the database"),
-    letter_service: LetterService = Depends(get_letter_service)
+    letter_service: LetterService = Depends(get_letter_service),
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Create a cover letter from a URL source.
@@ -59,7 +62,8 @@ async def create_letter_from_text(
     name: str = Form(..., min_length=1, max_length=100, description="Job title"),
     description: str = Form(..., min_length=1, description="Job description"),
     source_id: int = Form(..., description="Source ID of the CV in the database"),
-    letter_service: LetterService = Depends(get_letter_service)
+    letter_service: LetterService = Depends(get_letter_service),
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Create a cover letter from job title and description.
@@ -98,7 +102,9 @@ async def create_letter_from_text(
 async def upload_cv(
     file: UploadFile = File(..., description="PDF file containing the CV/resume"),
     source_id: int = Form(..., description="Unique identifier for the CV source"),
-    letter_service: LetterService = Depends(get_letter_service)
+    user_id: int = Form(..., description="User ID who owns the CV"),
+    letter_service: LetterService = Depends(get_letter_service),
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Upload a CV/resume PDF file to the vector database.
@@ -125,8 +131,16 @@ async def upload_cv(
             temp_file_path = temp_file.name
 
         try:
-            # Upload CV to vector database
-            await letter_service.add_cv(temp_file_path, source_id)
+            # Upload CV to vector database and save metadata to PostgreSQL
+            await letter_service.add_cv(
+                user_id=user_id,
+                pdf_path=temp_file_path,
+                source_id=source_id,
+                filename=file.filename,
+                original_filename=file.filename,
+                file_size=len(file_content),
+                content_type=file.content_type or "application/pdf"
+            )
 
             return CVUploadResponse(
                 success=True,

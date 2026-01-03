@@ -16,4 +16,13 @@ dependencies = [
     "qdrant-client>=1.16.2",
     "streamlit>=1.52.2",
     "uvicorn>=0.40.0",
+    # Database
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.13.0",
+    # "asyncpg>=0.29.0",  # Commented out for Windows compatibility
+    "psycopg2-binary>=2.9.0",
+    "pyjwt>=2.10.1",
+    "passlib>=1.7.4",
+    "pydantic[email]>=2.12.5",
+    "sqlmodel>=0.0.31",
 ]

@@ -1,14 +1,20 @@
 from openai import OpenAI
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.pdf import PdfService
 from app.schemas.rag import RAGSearchResult
 from app.storage.repository.qdrant import QdrantStorage
+from app.repository.cv_repository import CVRepository
+from app.repository.letter_repository import LetterRepository
 from typing import List, Dict, Any
 import json
 class LetterService():
-    def __init__(self):
+    def __init__(self, session: AsyncSession = None):
         self.client = OpenAI()
         self.storage = QdrantStorage()
-        self.pdf_service = PdfService()
+        self.session = session
+        self.pdf_service = PdfService(session)
+        self.cv_repository = CVRepository(session) if session else None
+        self.letter_repository = LetterRepository(session) if session else None
 
     async def search_job_requirements(self, job_title: str, company: str = None) -> str:
         """
@@ -100,24 +106,68 @@ class LetterService():
 """
 
         try:
-            response = self.client.responses.create(
-                model="gpt-5-mini",
-                input=prompt
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Ты - эксперт по написанию профессиональных сопроводительных писем."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                max_tokens=1000,
+                temperature=0.7
             )
 
-            return response.output_text
+            letter_content = response.choices[0].message.content
+
+            # Save letter to database if repository is available
+            if self.letter_repository:
+                cv = await self.cv_repository.get_cv_by_source_id(source_id) if self.cv_repository else None
+                if cv:
+                    await self.letter_repository.create_letter(
+                        cv_id=cv.id,
+                        source_id=source_id,
+                        job_title=job_requirements[:200] if len(job_requirements) > 200 else job_requirements,
+                        letter_content=letter_content,
+                        job_requirements=job_requirements
+                    )
+
+            return letter_content
 
         except Exception as e:
             return f"Ошибка при генерации сопроводительного письма: {str(e)}" 
-    async def add_cv(self, pdf_path: str, source_id: int):
+    async def add_cv(self, user_id: int, pdf_path: str, source_id: int, filename: str = None,
+                    original_filename: str = None, file_size: int = 0, content_type: str = "application/pdf",
+                    upload_ip: str = None, user_agent: str = None):
         """
-        Загружает CV в векторную базу данных
+        Загружает CV в векторную базу данных и сохраняет метаданные в PostgreSQL
 
         Args:
+            user_id: ID пользователя, которому принадлежит CV
             pdf_path: Путь к PDF файлу резюме
             source_id: Уникальный ID источника
+            filename: Имя файла
+            original_filename: Оригинальное имя файла
+            file_size: Размер файла в байтах
+            content_type: MIME тип файла
+            upload_ip: IP адрес загрузки
+            user_agent: User agent браузера
         """
-        await self.pdf_service.add_cv(pdf_path, source_id)
+        await self.pdf_service.add_cv(
+            user_id=user_id,
+            pdf_path=pdf_path,
+            source_id=source_id,
+            filename=filename,
+            original_filename=original_filename,
+            file_size=file_size,
+            content_type=content_type,
+            upload_ip=upload_ip,
+            user_agent=user_agent
+        )
 
     async def generate_by_url(self, job_url: str, source_id: int) -> str:
         """
