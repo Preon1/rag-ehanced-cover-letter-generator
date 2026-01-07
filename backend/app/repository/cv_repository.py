@@ -31,19 +31,19 @@ class CVRepository:
     async def get_cv_by_source_id(self, source_id: int) -> Optional[CV]:
         """Get CV by source_id"""
         stmt = select(CV).where(CV.source_id == source_id)
-        result = await self.session.execute(stmt)
+        result = self.session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_cv_by_id(self, cv_id: int) -> Optional[CV]:
         """Get CV by ID"""
         stmt = select(CV).where(CV.id == cv_id)
-        result = await self.session.execute(stmt)
+        result = self.session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_cvs_by_user_id(self, user_id: int) -> list[CV]:
         """Get all CVs for a user"""
         stmt = select(CV).where(CV.user_id == user_id)
-        result = await self.session.execute(stmt)
+        result = self.session.execute(stmt)
         return list(result.scalars().all())
 
     async def update_cv_status(self, cv_id: int, status: str) -> bool:

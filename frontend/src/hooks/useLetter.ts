@@ -1,4 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
+import { authApi } from '@/api/client';
 import type { LetterFromUrlRequest, LetterFromTextRequest, LetterResponse, CVUploadRequest, CVUploadResponse } from '@/types/letter';
 
 /**
@@ -15,18 +16,13 @@ export const useCreateLetterFromUrl = () => {
         formData.append('file', data.file);
       }
 
-      // Since apiRequest expects JSON, we'll make a direct fetch call for FormData
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/letter/url`, {
-        method: 'POST',
-        body: formData,
+      const response = await authApi.post('/letter/url', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || errorData.message || 'Failed to create letter from URL');
-      }
-
-      return response.json();
+      return response.data;
     },
     onError: (error) => {
       console.error('Error creating letter from URL:', error);
@@ -49,18 +45,13 @@ export const useCreateLetterFromText = () => {
         formData.append('file', data.file);
       }
 
-      // Since apiRequest expects JSON, we'll make a direct fetch call for FormData
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/letter/text`, {
-        method: 'POST',
-        body: formData,
+      const response = await authApi.post('/letter/text', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || errorData.message || 'Failed to create letter from text');
-      }
-
-      return response.json();
+      return response.data;
     },
     onError: (error) => {
       console.error('Error creating letter from text:', error);
@@ -81,17 +72,13 @@ export const useUploadCV = () => {
       const sourceId = Date.now(); // Simple approach, you might want to use a proper UUID
       formData.append('source_id', sourceId.toString());
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/letter/upload-cv`, {
-        method: 'POST',
-        body: formData,
+      const response = await authApi.post('/letter/upload-cv', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || errorData.message || 'Failed to upload CV');
-      }
-
-      const result = await response.json();
+      const result = response.data;
       // Add the source_id to the response for frontend use
       result.source_id = sourceId;
       return result;

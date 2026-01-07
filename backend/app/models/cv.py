@@ -10,7 +10,7 @@ class CV(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="users.id", nullable=False, index=True)
-    source_id: int = Field(unique=True, nullable=False, index=True)
+    source_id: str = Field(unique=True, nullable=False, index=True)
     filename: str = Field(nullable=False, max_length=255)
     original_filename: str = Field(nullable=False, max_length=255)
     file_path: Optional[str] = Field(default=None, max_length=500)

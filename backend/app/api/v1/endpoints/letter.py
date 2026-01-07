@@ -1,15 +1,20 @@
-from typing import Optional
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends
+import logging
+
+from typing import Annotated, Optional
+from fastapi import APIRouter, Request, UploadFile, File, Form, HTTPException, Depends
 from pydantic import HttpUrl
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.letter import (
-    LetterFromUrlRequest,
-    LetterFromTextRequest,
     LetterResponse,
     CVUploadResponse
 )
 from app.services.letter import LetterService
 from app.database import get_db
+from app.helper.user import CurrentUser, get_current_user, get_user_repository
+from app.models.user import User
+from app.repository.user_repository import UserRepository
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -17,6 +22,8 @@ def get_letter_service(db: AsyncSession = Depends(get_db)) -> LetterService:
     """Dependency to get LetterService instance with database session"""
     return LetterService(db)
 
+
+CurrentUser = Annotated[User, Depends(get_current_user)]
 
 @router.post("/url", response_model=LetterResponse)
 async def create_letter_from_url(
@@ -55,6 +62,7 @@ async def create_letter_from_url(
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 
 @router.post("/text", response_model=LetterResponse)
@@ -100,9 +108,11 @@ async def create_letter_from_text(
 
 @router.post("/upload-cv", response_model=CVUploadResponse)
 async def upload_cv(
+    request: Request,
+    user_repo: UserRepository = Depends(get_user_repository),
     file: UploadFile = File(..., description="PDF file containing the CV/resume"),
-    source_id: int = Form(..., description="Unique identifier for the CV source"),
-    user_id: int = Form(..., description="User ID who owns the CV"),
+    source_id: str = Form(..., description="Unique identifier for the CV source"),
+    
     letter_service: LetterService = Depends(get_letter_service),
     db: AsyncSession = Depends(get_db)
 ):
@@ -131,9 +141,10 @@ async def upload_cv(
             temp_file_path = temp_file.name
 
         try:
-            # Upload CV to vector database and save metadata to PostgreSQL
+            user_email = request.state.user_email
+            current_user = _get_user_by_mail(user_email,user_repo)
             await letter_service.add_cv(
-                user_id=user_id,
+                user_id=current_user.id,
                 pdf_path=temp_file_path,
                 source_id=source_id,
                 filename=file.filename,
@@ -161,4 +172,10 @@ async def upload_cv(
     except HTTPException:
         raise
     except Exception as e:
+        logging.error("Error uploading CV", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error uploading CV: {str(e)}")
+
+
+def _get_user_by_mail(email:str,user_repo: UserRepository):
+    current_user = user_repo.get_user_by_email(email)
+    return current_user

@@ -1,5 +1,5 @@
 # api/v1/auth.py
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from sqlmodel import Session
@@ -10,6 +10,7 @@ from app.services.password import PasswordService
 from app.database import get_db
 from app.repository.user_repository import UserRepository
 from app.models.user import User
+from app.helper.user import CurrentUser, get_current_user, get_user_repository
 
 # Pydantic models
 class LoginRequest(BaseModel):
@@ -43,54 +44,13 @@ class UserResponse(BaseModel):
 router = APIRouter()
 jwt_service = JwtService()
 password_service = PasswordService()
-security = HTTPBearer()
+# security = HTTPBearer()
 
 # Dependencies
-def get_user_repository(session: Session = Depends(get_db)) -> UserRepository:
-    """Dependency to get UserRepository with database session"""
-    return UserRepository(session)
 
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    user_repo: UserRepository = Depends(get_user_repository)
-) -> User:
-    """Get current user from JWT token"""
-    try:
-        payload = jwt_service.decode_jwt(credentials.credentials)
-        email = payload.get("email")
-        if not email:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload",
-                headers={"WWW-Authenticate": "Bearer"}
-            )
-        
-        user = user_repo.get_user_by_email(email)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found",
-                headers={"WWW-Authenticate": "Bearer"}
-            )
-        
-        if not user.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account is deactivated"
-            )
-        
-        return user
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
+
 
 # Type alias for cleaner code
-CurrentUser = Annotated[User, Depends(get_current_user)]
 UserRepo = Annotated[UserRepository, Depends(get_user_repository)]
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -203,8 +163,15 @@ def refresh_token(refresh_data: RefreshTokenRequest):
         )
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user_info(current_user: CurrentUser):
+def get_current_user_info(
+    request: Request,
+    user_repo: UserRepository = Depends(get_user_repository),
+):
     """Get current user information"""
+
+    user_email = request.state.user_email
+    current_user = _get_user_by_mail(user_email,user_repo)
+
     return UserResponse(
         id=current_user.id,
         email=current_user.email,
@@ -219,3 +186,9 @@ def get_current_user_info(current_user: CurrentUser):
 def logout(current_user: CurrentUser):
     """Logout user (client should discard tokens)"""
     return {"message": "Logged out successfully"}
+
+
+
+def _get_user_by_mail(email:str,user_repo: UserRepository):
+    current_user = user_repo.get_user_by_email(email)
+    return current_user

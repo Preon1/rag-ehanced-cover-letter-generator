@@ -140,7 +140,7 @@ class LetterService():
 
         except Exception as e:
             return f"Ошибка при генерации сопроводительного письма: {str(e)}" 
-    async def add_cv(self, user_id: int, pdf_path: str, source_id: int, filename: str = None,
+    async def add_cv(self, user_id: int, pdf_path: str, source_id: str, filename: str = None,
                     original_filename: str = None, file_size: int = 0, content_type: str = "application/pdf",
                     upload_ip: str = None, user_agent: str = None):
         """

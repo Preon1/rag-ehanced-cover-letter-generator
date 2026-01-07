@@ -14,8 +14,10 @@ class Settings:
 
     # CORS
     CORS_ORIGINS: List[str] = [
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",  # Alternative dev port
+        "http://localhost:5173",
+        "http://localhost:5173/",
+        "http://localhost:3000",
+        "http://localhost:3000/",
     ]
 
     # Environment

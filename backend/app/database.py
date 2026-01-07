@@ -42,7 +42,6 @@ def init_db() -> None:
 def check_db_connection() -> bool:
     """Check if database connection is working"""
     try:
-        print("url is ",settings.DATABASE_URL)
         with Session(engine) as session:
             session.exec(text("SELECT 1"))
         logger.info("Database connection check: OK")

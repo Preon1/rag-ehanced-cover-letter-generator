@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
+import { authApi } from '@/features/auth/api/auth-client';
 
 // API client configuration
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
@@ -38,7 +39,7 @@ export class ApiError extends Error {
   }
 }
 
-// Base fetch function with error handling
+// Base fetch function with error handling (for public endpoints)
 export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -75,3 +76,9 @@ export async function apiRequest<T>(
     throw new ApiError('Network error occurred', 0);
   }
 }
+
+// Authenticated API request function (uses axios with auth headers)
+export const authenticatedApiRequest = authApi;
+
+// Export authApi for direct use
+export { authApi };

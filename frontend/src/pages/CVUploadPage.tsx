@@ -2,12 +2,19 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
-  Field,
+  FormControl,
+  FormLabel,
+  FormHelperText,
   Input,
   VStack,
   Card,
+  CardHeader,
+  CardBody,
   Heading,
   Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
   Text,
 } from '@chakra-ui/react';
 import { useUploadCV } from '@/hooks/useLetter';
@@ -43,29 +50,29 @@ const CVUploadPage: React.FC<CVUploadPageProps> = ({ onUploadSuccess }) => {
         First, upload your resume (PDF format) to get started with cover letter generation.
       </Text>
 
-      <Card.Root>
-        <Card.Header>
+      <Card>
+        <CardHeader>
           <Heading size="md">Resume Upload</Heading>
-        </Card.Header>
-        <Card.Body>
+        </CardHeader>
+        <CardBody>
           <form onSubmit={handleSubmit}>
-            <VStack gap={4}>
-              <Field.Root required>
-                <Field.Label>Resume File (PDF)</Field.Label>
+            <VStack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel>Resume File (PDF)</FormLabel>
                 <Input
                   type="file"
                   accept=".pdf"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
                 />
-                <Field.HelperText>
+                <FormHelperText>
                   Only PDF files are supported. Maximum size: 10MB.
-                </Field.HelperText>
-              </Field.Root>
+                </FormHelperText>
+              </FormControl>
 
               <Button
                 type="submit"
                 colorScheme="blue"
-                loading={uploadCV.isPending}
+                isLoading={uploadCV.isPending}
                 loadingText="Uploading..."
                 width="full"
                 disabled={!file}
@@ -74,28 +81,28 @@ const CVUploadPage: React.FC<CVUploadPageProps> = ({ onUploadSuccess }) => {
               </Button>
             </VStack>
           </form>
+        </CardBody>
+      </Card>
 
-          {uploadCV.isError && (
-            <Alert.Root status="error" mt={4}>
-              <Alert.Indicator />
-              <Alert.Title>Upload Failed!</Alert.Title>
-              <Alert.Description>
-                {uploadCV.error.message}
-              </Alert.Description>
-            </Alert.Root>
-          )}
+      {uploadCV.isError && (
+        <Alert status="error" mt={4}>
+          <AlertIcon />
+          <AlertTitle>Upload Failed!</AlertTitle>
+          <AlertDescription>
+            {uploadCV.error.message}
+          </AlertDescription>
+        </Alert>
+      )}
 
-          {uploadCV.isSuccess && uploadCV.data?.success && (
-            <Alert.Root status="success" mt={4}>
-              <Alert.Indicator />
-              <Alert.Title>Upload Successful!</Alert.Title>
-              <Alert.Description>
-                Your resume has been uploaded successfully. Resume ID: {uploadCV.data.source_id}
-              </Alert.Description>
-            </Alert.Root>
-          )}
-        </Card.Body>
-      </Card.Root>
+      {uploadCV.isSuccess && uploadCV.data?.success && (
+        <Alert status="success" mt={4}>
+          <AlertIcon />
+          <AlertTitle>Upload Successful!</AlertTitle>
+          <AlertDescription>
+            Your resume has been uploaded successfully. Resume ID: {uploadCV.data.source_id}
+          </AlertDescription>
+        </Alert>
+      )}
     </Box>
   );
 };

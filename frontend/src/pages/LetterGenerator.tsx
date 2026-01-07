@@ -2,23 +2,35 @@ import React, { useState } from 'react';
 import {
   Box,
   Button,
-  Field,
+  FormControl,
+  FormLabel,
+  FormHelperText,
   Input,
   Textarea,
   VStack,
   Card,
+  CardHeader,
+  CardBody,
   Heading,
   Tabs,
+  TabList,
+  Tab,
+  TabPanels,
+  TabPanel,
   Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
   Text,
 } from '@chakra-ui/react';
 import { useCreateLetterFromUrl, useCreateLetterFromText } from '@/hooks/useLetter';
 
 interface LetterGeneratorProps {
   sourceId: number;
+  onBack?: () => void;
 }
 
-const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId }) => {
+const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId, onBack }) => {
   const [url, setUrl] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -38,6 +50,17 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId }) => {
 
   return (
     <Box maxW="800px" mx="auto" mt={8} p={4}>
+      {onBack && (
+        <Button
+          onClick={onBack}
+          mb={4}
+          variant="outline"
+          leftIcon={<span>←</span>}
+        >
+          Назад к загрузке CV
+        </Button>
+      )}
+
       <Heading mb={4} textAlign="center">
         Cover Letter Generator
       </Heading>
@@ -46,35 +69,35 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId }) => {
         Resume ID: {sourceId}
       </Text>
 
-      <Tabs.Root variant="enclosed" defaultValue="url">
-        <Tabs.List>
-          <Tabs.Trigger value="url">From URL</Tabs.Trigger>
-          <Tabs.Trigger value="text">From Text</Tabs.Trigger>
-        </Tabs.List>
+      <Tabs variant="enclosed" defaultIndex={0}>
+        <TabList>
+          <Tab>From URL</Tab>
+          <Tab>From Text</Tab>
+        </TabList>
 
-        <Tabs.Content value="url">
-            <Card.Root>
-              <Card.Header>
+        <TabPanels>
+          <TabPanel>
+            <Card>
+              <CardHeader>
                 <Heading size="md">Create Letter from URL</Heading>
-              </Card.Header>
-              <Card.Body>
+              </CardHeader>
+              <CardBody>
                 <form onSubmit={handleUrlSubmit}>
-                  <VStack gap={4}>
-                    <Field.Root required>
-                      <Field.Label>URL</Field.Label>
+                  <VStack spacing={4}>
+                    <FormControl isRequired>
+                      <FormLabel>URL</FormLabel>
                       <Input
                         type="url"
                         placeholder="https://example.com/job-description"
                         value={url}
                         onChange={(e) => setUrl(e.target.value)}
                       />
-                    </Field.Root>
-
+                    </FormControl>
 
                     <Button
                       type="submit"
                       colorScheme="blue"
-                      loading={createFromUrl.isPending}
+                      isLoading={createFromUrl.isPending}
                       loadingText="Creating..."
                       width="full"
                     >
@@ -84,60 +107,60 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId }) => {
                 </form>
 
                 {createFromUrl.isError && (
-                  <Alert.Root status="error" mt={4}>
-                    <Alert.Indicator />
-                    <Alert.Title>Error!</Alert.Title>
-                    <Alert.Description>
+                  <Alert status="error" mt={4}>
+                    <AlertIcon />
+                    <AlertTitle>Error!</AlertTitle>
+                    <AlertDescription>
                       {createFromUrl.error.message}
-                    </Alert.Description>
-                  </Alert.Root>
+                    </AlertDescription>
+                  </Alert>
                 )}
 
                 {createFromUrl.isSuccess && (
-                  <Alert.Root status="success" mt={4}>
-                    <Alert.Indicator />
-                    <Alert.Title>Success!</Alert.Title>
-                    <Alert.Description>
+                  <Alert status="success" mt={4}>
+                    <AlertIcon />
+                    <AlertTitle>Success!</AlertTitle>
+                    <AlertDescription>
                       {createFromUrl.data.message}
-                    </Alert.Description>
-                  </Alert.Root>
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </Card.Body>
-            </Card.Root>
-          </Tabs.Content>
+              </CardBody>
+            </Card>
+          </TabPanel>
 
-          <Tabs.Content value="text">
-            <Card.Root>
-              <Card.Header>
+          <TabPanel>
+            <Card>
+              <CardHeader>
                 <Heading size="md">Create Letter from Text</Heading>
-              </Card.Header>
-              <Card.Body>
+              </CardHeader>
+              <CardBody>
                 <form onSubmit={handleTextSubmit}>
-                  <VStack gap={4}>
-                    <Field.Root required>
-                      <Field.Label>Name</Field.Label>
+                  <VStack spacing={4}>
+                    <FormControl isRequired>
+                      <FormLabel>Name</FormLabel>
                       <Input
                         placeholder="Enter letter name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                       />
-                    </Field.Root>
+                    </FormControl>
 
-                    <Field.Root required>
-                      <Field.Label>Description</Field.Label>
+                    <FormControl isRequired>
+                      <FormLabel>Description</FormLabel>
                       <Textarea
                         placeholder="Enter letter description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         rows={4}
                       />
-                    </Field.Root>
+                    </FormControl>
 
 
                     <Button
                       type="submit"
                       colorScheme="green"
-                      loading={createFromText.isPending}
+                      isLoading={createFromText.isPending}
                       loadingText="Creating..."
                       width="full"
                     >
@@ -147,28 +170,29 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId }) => {
                 </form>
 
                 {createFromText.isError && (
-                  <Alert.Root status="error" mt={4}>
-                    <Alert.Indicator />
-                    <Alert.Title>Error!</Alert.Title>
-                    <Alert.Description>
+                  <Alert status="error" mt={4}>
+                    <AlertIcon />
+                    <AlertTitle>Error!</AlertTitle>
+                    <AlertDescription>
                       {createFromText.error.message}
-                    </Alert.Description>
-                  </Alert.Root>
+                    </AlertDescription>
+                  </Alert>
                 )}
 
                 {createFromText.isSuccess && (
-                  <Alert.Root status="success" mt={4}>
-                    <Alert.Indicator />
-                    <Alert.Title>Success!</Alert.Title>
-                    <Alert.Description>
+                  <Alert status="success" mt={4}>
+                    <AlertIcon />
+                    <AlertTitle>Success!</AlertTitle>
+                    <AlertDescription>
                       {createFromText.data.message}
-                    </Alert.Description>
-                  </Alert.Root>
+                    </AlertDescription>
+                  </Alert>
                 )}
-              </Card.Body>
-            </Card.Root>
-          </Tabs.Content>
-        </Tabs.Root>
+              </CardBody>
+            </Card>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </Box>
   );
 };

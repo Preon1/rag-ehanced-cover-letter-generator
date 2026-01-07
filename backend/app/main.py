@@ -42,6 +42,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.add_middleware(AuthMiddleware)
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -51,7 +53,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(AuthMiddleware)
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
