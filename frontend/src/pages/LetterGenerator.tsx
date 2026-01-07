@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { memo, useState } from 'react';
 import {
   Box,
   Button,
@@ -22,30 +22,52 @@ import {
   AlertTitle,
   AlertDescription,
   Text,
+  Select,
+  Spinner,
 } from '@chakra-ui/react';
-import { useCreateLetterFromUrl, useCreateLetterFromText } from '@/hooks/useLetter';
+import { useCreateLetterFromUrl, useCreateLetterFromText, useCVOptions } from '@/hooks/useLetter';
+import type {  CVOptionsResponse } from '@/types/letter';
 
 interface LetterGeneratorProps {
-  sourceId: number;
+  // sourceId: number;
   onBack?: () => void;
 }
 
-const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId, onBack }) => {
+const OptionsList: React.FC<{ response:CVOptionsResponse|undefined }> =memo(({ response }) =>  {
+  if (!response) {
+    return null;
+  }
+ console.log("CV Options Response:", response.data);
+  return (
+    <>
+    {response.data.options.map((cv) => (
+      <option key={`${cv.value}_option`} value={cv.value}>
+        {cv.name}
+      </option>
+    ))}
+    </>
+  )
+}) 
+
+
+const LetterGenerator: React.FC<LetterGeneratorProps> = ({ onBack }) => {
   const [url, setUrl] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [selectedSourceId, setSelectedSourceId] = useState<number>(0);
 
   const createFromUrl = useCreateLetterFromUrl();
   const createFromText = useCreateLetterFromText();
+  const { data: cvOptions, isLoading: isLoadingOptions, error: optionsError } = useCVOptions();
 
   const handleUrlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createFromUrl.mutate({ url, source_id: sourceId });
+    createFromUrl.mutate({ url, source_id: selectedSourceId });
   };
 
   const handleTextSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createFromText.mutate({ name, description, source_id: sourceId });
+    createFromText.mutate({ name, description, source_id: selectedSourceId });
   };
 
   return (
@@ -65,9 +87,21 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId, onBack }) =
         Cover Letter Generator
       </Heading>
 
-      <Text mb={6} textAlign="center" color="gray.600">
-        Resume ID: {sourceId}
-      </Text>
+      {isLoadingOptions && (
+        <Box textAlign="center" mb={4}>
+          <Spinner size="md" />
+          <Text ml={2}>Loading CV options...</Text>
+        </Box>
+      )}
+
+      {optionsError && (
+        <Alert status="error" mb={4}>
+          <AlertIcon />
+          <AlertDescription>
+            Failed to load CV options: {optionsError.message}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Tabs variant="enclosed" defaultIndex={0}>
         <TabList>
@@ -84,6 +118,21 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId, onBack }) =
               <CardBody>
                 <form onSubmit={handleUrlSubmit}>
                   <VStack spacing={4}>
+                    <FormControl isRequired>
+                      <FormLabel>Select Resume</FormLabel>
+                      <Select
+                        placeholder="Choose your resume"
+                        value={selectedSourceId}
+                        onChange={(e) => setSelectedSourceId(Number(e.target.value))}
+                        isDisabled={isLoadingOptions}
+                      >
+                        <OptionsList response={cvOptions} />
+                      </Select>
+                      <FormHelperText>
+                        Select which resume to use for generating the cover letter
+                      </FormHelperText>
+                    </FormControl>
+
                     <FormControl isRequired>
                       <FormLabel>URL</FormLabel>
                       <Input
@@ -138,7 +187,23 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId, onBack }) =
                 <form onSubmit={handleTextSubmit}>
                   <VStack spacing={4}>
                     <FormControl isRequired>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Select Resume</FormLabel>
+                      <Select
+                        placeholder="Choose your resume"
+                        value={selectedSourceId}
+                        onChange={(e) => setSelectedSourceId(Number(e.target.value))}
+                        isDisabled={isLoadingOptions}
+                      >
+                        <OptionsList response={cvOptions} />
+                    
+                      </Select>
+                      <FormHelperText>
+                        Select which resume to use for generating the cover letter
+                      </FormHelperText>
+                    </FormControl>
+
+                    <FormControl isRequired>
+                      <FormLabel>Название</FormLabel>
                       <Input
                         placeholder="Enter letter name"
                         value={name}
@@ -147,7 +212,7 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ sourceId, onBack }) =
                     </FormControl>
 
                     <FormControl isRequired>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Описание</FormLabel>
                       <Textarea
                         placeholder="Enter letter description"
                         value={description}

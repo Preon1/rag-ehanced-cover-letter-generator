@@ -28,8 +28,8 @@ class PdfService():
         text_chunks = self._load_and_chunk_pdf(pdf_path)
         vectors = self.embed_texts(text_chunks)
 
-        now = time.time()
-        ids = [f"{source_id}_{now + i}" for i in range(len(text_chunks))]
+        
+        ids = [abs(hash(f"{original_filename}_{source_id}_{i+1}")) for i in range(len(text_chunks))]
         payloads = [
             {
                 "user_id":user_id,

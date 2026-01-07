@@ -39,3 +39,14 @@ export interface LetterResponse {
   };
   errors?: string[];
 }
+
+export interface GeneralOption {
+  value: string;
+  name: string;
+}
+
+export interface CVOptionsResponse {
+  data:{
+    options:GeneralOption[]
+  }
+}

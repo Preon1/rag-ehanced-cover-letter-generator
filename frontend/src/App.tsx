@@ -34,21 +34,19 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
 
               {/* Protected routes */}
+              <Route path="/" element={
+                <PrivateRoute>
+                  <LetterGenerator onBack={handleBackToUpload} />
+                </PrivateRoute>
+              } />
               <Route
-                path="/"
+                path="/upload-cv"
                 element={
                   <PrivateRoute>
                     <Box>
                       <Navigation />
                       <Box pt={4}>
-                        {sourceId ? (
-                          <LetterGenerator
-                            sourceId={sourceId}
-                            onBack={handleBackToUpload}
-                          />
-                        ) : (
-                          <CVUploadPage onUploadSuccess={handleUploadSuccess} />
-                        )}
+                        <CVUploadPage onUploadSuccess={handleUploadSuccess} />
                       </Box>
                     </Box>
                   </PrivateRoute>

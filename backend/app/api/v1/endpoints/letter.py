@@ -69,7 +69,7 @@ async def create_letter_from_url(
 async def create_letter_from_text(
     name: str = Form(..., min_length=1, max_length=100, description="Job title"),
     description: str = Form(..., min_length=1, description="Job description"),
-    source_id: int = Form(..., description="Source ID of the CV in the database"),
+    # source_id: int = Form(..., description="Source ID of the CV in the database"),
     letter_service: LetterService = Depends(get_letter_service),
     db: AsyncSession = Depends(get_db)
 ):
@@ -92,7 +92,6 @@ async def create_letter_from_text(
             raise HTTPException(status_code=500, detail=letter_content)
 
         result = {
-            "source_id": source_id,
             "letter_content": letter_content
         }
 
@@ -103,6 +102,7 @@ async def create_letter_from_text(
         )
 
     except Exception as e:
+        logging.error("Error uploading CV", exc_info=True)
         raise HTTPException(status_code=400, detail=str(e))
 
 

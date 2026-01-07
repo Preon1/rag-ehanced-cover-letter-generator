@@ -35,9 +35,12 @@ class CVUploadResponse(BaseModel):
     errors: Optional[list[str]] = None
 
 
-class LetterResponse(BaseModel):
-    """Response schema for letter operations"""
+class GeneralResponse(BaseModel):
+    """Response schema for general operations"""
     success: bool
-    message: str
     data: Optional[dict] = None
     errors: Optional[list[str]] = None
+
+class LetterResponse(GeneralResponse):
+    """Response schema for letter operations"""
+    message: str
