@@ -24,6 +24,8 @@ import {
   Text,
   Select,
   Spinner,
+  IconButton,
+  HStack,
 } from '@chakra-ui/react';
 import { useCreateLetterFromUrl, useCreateLetterFromText, useCVOptions } from '@/hooks/useLetter';
 import type {  CVOptionsResponse } from '@/types/letter';
@@ -55,6 +57,8 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ onBack }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedSourceId, setSelectedSourceId] = useState<number>(0);
+  const [showCopiedAlertUrl, setShowCopiedAlertUrl] = useState(false);
+  const [showCopiedAlertText, setShowCopiedAlertText] = useState(false);
 
   const createFromUrl = useCreateLetterFromUrl();
   const createFromText = useCreateLetterFromText();
@@ -166,13 +170,52 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ onBack }) => {
                 )}
 
                 {createFromUrl.isSuccess && (
-                  <Alert status="success" mt={4}>
-                    <AlertIcon />
-                    <AlertTitle>Success!</AlertTitle>
-                    <AlertDescription>
-                      {createFromUrl.data.message}
-                    </AlertDescription>
-                  </Alert>
+                  <>
+                    <Alert status="success" mt={4}>
+                      <AlertIcon />
+                      <AlertTitle>Success!</AlertTitle>
+                      <AlertDescription>
+                        {createFromUrl.data.message}
+                      </AlertDescription>
+                    </Alert>
+                    
+                    {createFromUrl.data.data?.letter_content && (
+                      <Box mt={4} p={4} borderWidth="1px" borderRadius="lg" bg="gray.50" position="relative">
+                        <HStack justify="space-between" mb={2}>
+                          <Heading size="sm">Generated Letter</Heading>
+                          <IconButton
+                            aria-label="Copy to clipboard"
+                            icon={<span>📋</span>}
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(createFromUrl.data.data?.letter_content || '');
+                              setShowCopiedAlertUrl(true);
+                              setTimeout(() => setShowCopiedAlertUrl(false), 3000);
+                            }}
+                            colorScheme="blue"
+                          />
+                        </HStack>
+                        {showCopiedAlertUrl && (
+                          <Alert status="info" borderRadius="md" position="absolute" top={4} left={4} right={4} zIndex={10} boxShadow="lg">
+                            <AlertIcon />
+                            <AlertDescription>Скопировано в буфер обмена</AlertDescription>
+                          </Alert>
+                        )}
+                        <Box
+                          mt={2}
+                          p={4}
+                          bg="white"
+                          borderRadius="md"
+                          maxH="400px"
+                          overflowY="auto"
+                          whiteSpace="pre-wrap"
+                          fontSize="sm"
+                        >
+                          {createFromUrl.data.data.letter_content}
+                        </Box>
+                      </Box>
+                    )}
+                  </>
                 )}
               </CardBody>
             </Card>
@@ -245,13 +288,52 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ onBack }) => {
                 )}
 
                 {createFromText.isSuccess && (
-                  <Alert status="success" mt={4}>
-                    <AlertIcon />
-                    <AlertTitle>Success!</AlertTitle>
-                    <AlertDescription>
-                      {createFromText.data.message}
-                    </AlertDescription>
-                  </Alert>
+                  <>
+                    <Alert status="success" mt={4}>
+                      <AlertIcon />
+                      <AlertTitle>Success!</AlertTitle>
+                      <AlertDescription>
+                        {createFromText.data.message}
+                      </AlertDescription>
+                    </Alert>
+                    
+                    {createFromText.data.data?.letter_content && (
+                      <Box mt={4} p={4} borderWidth="1px" borderRadius="lg" bg="gray.50" position="relative">
+                        <HStack justify="space-between" mb={2}>
+                          <Heading size="sm">Generated Letter</Heading>
+                          <IconButton
+                            aria-label="Copy to clipboard"
+                            icon={<span>📋</span>}
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(createFromText.data.data?.letter_content || '');
+                              setShowCopiedAlertText(true);
+                              setTimeout(() => setShowCopiedAlertText(false), 3000);
+                            }}
+                            colorScheme="blue"
+                          />
+                        </HStack>
+                        {showCopiedAlertText && (
+                          <Alert status="info" borderRadius="md" position="absolute" top={4} left={4} right={4} zIndex={10} boxShadow="lg">
+                            <AlertIcon />
+                            <AlertDescription>Скопировано в буфер обмена</AlertDescription>
+                          </Alert>
+                        )}
+                        <Box
+                          mt={2}
+                          p={4}
+                          bg="white"
+                          borderRadius="md"
+                          maxH="400px"
+                          overflowY="auto"
+                          whiteSpace="pre-wrap"
+                          fontSize="sm"
+                        >
+                          {createFromText.data.data.letter_content}
+                        </Box>
+                      </Box>
+                    )}
+                  </>
                 )}
               </CardBody>
             </Card>

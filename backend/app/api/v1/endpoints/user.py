@@ -46,7 +46,6 @@ async def get_cvs_by_user(
 ):
     """Get cvs options by user """
     user_email = request.state.user_email
-    print("user mail ",user_email)
     try:
         user = user_service.get_user_by_email(user_email)
     except Exception as e:

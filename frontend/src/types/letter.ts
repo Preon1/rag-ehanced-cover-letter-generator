@@ -31,11 +31,9 @@ export interface LetterResponse {
   success: boolean;
   message: string;
   data?: {
-    url?: string;
-    name?: string;
-    description?: string;
-    file_processed?: boolean;
-    file_name?: string;
+    url: string;
+    letter_content: string;
+    source_id: number;
   };
   errors?: string[];
 }

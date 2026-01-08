@@ -71,7 +71,7 @@ class LetterService():
             filtered_contexts = []
             filtered_sources = []
             for context, source in zip(found["contexts"], found["sources"]):
-                if source.get("source_id") == source_id:
+                if str(source.get("source_id")) == str(source_id):
                     filtered_contexts.append(context)
                     filtered_sources.append(source)
 
@@ -88,56 +88,61 @@ class LetterService():
         resume_context = "\n\n".join(f"- {c}" for c in resume_data.contexts)
 
         prompt = f"""
-        Ты - помощник по созданию профессиональных сопроводительных писем.
+       Ты - помощник по созданию профессиональных сопроводительных писем.
 
         У тебя есть:
         1. Требования к вакансии: {job_requirements}
         2. Данные из резюме кандидата: {resume_context}
-
-        Задача: Создать персонализированное сопроводительное письмо, которое:
-        - Подчеркивает релевантный опыт и навыки из резюме
-        - Показывает соответствие требованиям вакансии
-        - Демонстрирует интерес к компании и позиции
-        - Написано в профессиональном, но дружелюбном тоне
-        - Имеет стандартную структуру: вступление, основная часть, заключение
-        - Данные из резюме подставь в письмо без прочерков и пустых строк.
-
-        Письмо должно быть на том языке, на котором написаны требования для вакансии. Объемом 250-400 слов.
-"""
+    Задача: на основе этих данных сгенерировать персонализированное сопроводительное письмо, которое
+        Показывает почему мой предыдущий опыт поможет в их работе 
+        Имеет ключевые слова из резюме
+        Сопоставь (там где это максимально корректно) кейсы из моего релевантного опыта  к требованиям в вакансии, но так чтобы технологии соответствовали по смыслу
+        Пиши в профессиональном, но дружелюбном тоне
+        Избегай общих фраз и клише
+        Письмо должно быть на том языке, на котором написаны требования для вакансии. Объемом 200-300 слов.
+    """
 
         try:
-            response = self.client.chat.completions.create(
+            response = self.client.responses.create(
                 model="gpt-4o",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Ты - эксперт по написанию профессиональных сопроводительных писем."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                max_tokens=1000,
-                temperature=0.7
+                max_output_tokens=2048,
+                input=prompt,
+                temperature=1.0
             )
-
-            letter_content = response.choices[0].message.content
-
-            # Save letter to database if repository is available
-            if self.letter_repository:
-                cv = await self.cv_repository.get_cv_by_source_id(source_id) if self.cv_repository else None
-                if cv:
-                    await self.letter_repository.create_letter(
-                        cv_id=cv.id,
-                        source_id=source_id,
-                        job_title=job_requirements[:200] if len(job_requirements) > 200 else job_requirements,
-                        letter_content=letter_content,
-                        job_requirements=job_requirements
-                    )
-
+            print("========================== LETTER ==========================")
+            print(response.output_text)
+            letter_content = response.output_text
             return letter_content
 
+            # response = self.client.chat.completions.create(
+            #     model="gpt-4o",
+            #     messages=[
+            #         {
+            #             "role": "system",
+            #             "content": "Ты - эксперт по написанию профессиональных сопроводительных писем."
+            #         },
+            #         {
+            #             "role": "user",
+            #             "content": prompt
+            #         }
+            #     ],
+            #     max_tokens=1000,
+            #     temperature=0.7
+            # )
+
+            # letter_content = response.choices[0].message.content
+
+            # Save letter to database if repository is available
+            # if self.letter_repository:
+            #     cv = await self.cv_repository.get_cv_by_source_id(source_id) if self.cv_repository else None
+            #     if cv:
+            #         await self.letter_repository.create_letter(
+            #             cv_id=cv.id,
+            #             source_id=str(source_id),
+            #             job_title=job_requirements[:200] if len(job_requirements) > 200 else job_requirements,
+            #             letter_content=letter_content,
+            #             job_requirements=job_requirements
+            #         )
         except Exception as e:
             return f"Ошибка при генерации сопроводительного письма: {str(e)}" 
     async def add_cv(self, user_id: int, pdf_path: str, source_id: str, filename: str = None,
