@@ -38,6 +38,27 @@ def get_cv_service(
     return CVService(repo=cv_repo)
 
 
+@router.get("/cvs")
+async def get_all_cvs(
+    request: Request,
+    user_service:UserService = Depends(get_user_service),
+    cv_service:CVService = Depends(get_cv_service)
+):
+    user_email = request.state.user_email
+    try:
+        user = user_service.get_user_by_email(user_email)
+        cvs = await cv_service.get_by_user(user.id)
+        result = {
+            "cvs": cvs
+        }
+        return GeneralResponse(
+            success=True,
+            data=result
+        )
+    except Exception as e:
+        logging.error("Error retrieving CVs", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error retrieving CVs")     
+
 @router.get("/cvs/options")
 async def get_cvs_by_user(
     request:Request,
