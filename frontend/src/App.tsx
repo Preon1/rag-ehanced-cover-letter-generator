@@ -14,6 +14,7 @@ import Navigation from '@/features/auth/components/Navigation';
 // Main app components
 import CVUploadPage from '@/pages/CVUploadPage';
 import LetterGenerator from '@/pages/LetterGenerator';
+import UserCVPage from './pages/UserCVPage';
 
 function App() {
   const [sourceId, setSourceId] = useState<number | null>(null);
@@ -39,6 +40,11 @@ function App() {
                   <LetterGenerator onBack={handleBackToUpload} />
                 </PrivateRoute>
               } />
+              <Route
+               path="/my-cvs"
+              element={<UserCVPage/>}
+              
+              />
               <Route
                 path="/upload-cv"
                 element={

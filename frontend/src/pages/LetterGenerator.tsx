@@ -29,6 +29,7 @@ import {
 } from '@chakra-ui/react';
 import { useCreateLetterFromUrl, useCreateLetterFromText, useCVOptions } from '@/hooks/useLetter';
 import type {  CVOptionsResponse } from '@/types/letter';
+import { useNavigate } from 'react-router-dom';
 
 interface LetterGeneratorProps {
   // sourceId: number;
@@ -59,6 +60,7 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ onBack }) => {
   const [selectedSourceId, setSelectedSourceId] = useState<number>(0);
   const [showCopiedAlertUrl, setShowCopiedAlertUrl] = useState(false);
   const [showCopiedAlertText, setShowCopiedAlertText] = useState(false);
+  const navigate = useNavigate();
 
   const createFromUrl = useCreateLetterFromUrl();
   const createFromText = useCreateLetterFromText();
@@ -78,12 +80,11 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ onBack }) => {
     <Box maxW="800px" mx="auto" mt={8} p={4}>
       {onBack && (
         <Button
-          onClick={onBack}
+          onClick={()=>navigate('/my-cvs')}
           mb={4}
           variant="outline"
-          leftIcon={<span>←</span>}
         >
-          Назад к загрузке CV
+          Мои резюме
         </Button>
       )}
 

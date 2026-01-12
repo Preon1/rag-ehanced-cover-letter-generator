@@ -59,7 +59,8 @@ async def create_letter_from_url(
     db: AsyncSession = Depends(get_db)
 ):
 ```
-
+### Coding rules
+never import as backend.app use app.{module_name} only
 ### RAG Search Pattern
 From [letter.py service](backend/app/services/letter.py#L66-L79):
 ```python
