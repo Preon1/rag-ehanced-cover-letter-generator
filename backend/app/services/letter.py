@@ -114,37 +114,9 @@ class LetterService():
             letter_content = response.output_text
             return letter_content
 
-            # response = self.client.chat.completions.create(
-            #     model="gpt-4o",
-            #     messages=[
-            #         {
-            #             "role": "system",
-            #             "content": "Ты - эксперт по написанию профессиональных сопроводительных писем."
-            #         },
-            #         {
-            #             "role": "user",
-            #             "content": prompt
-            #         }
-            #     ],
-            #     max_tokens=1000,
-            #     temperature=0.7
-            # )
-
-            # letter_content = response.choices[0].message.content
-
-            # Save letter to database if repository is available
-            # if self.letter_repository:
-            #     cv = await self.cv_repository.get_cv_by_source_id(source_id) if self.cv_repository else None
-            #     if cv:
-            #         await self.letter_repository.create_letter(
-            #             cv_id=cv.id,
-            #             source_id=str(source_id),
-            #             job_title=job_requirements[:200] if len(job_requirements) > 200 else job_requirements,
-            #             letter_content=letter_content,
-            #             job_requirements=job_requirements
-            #         )
         except Exception as e:
             return f"Ошибка при генерации сопроводительного письма: {str(e)}" 
+        
     async def add_cv(self, user_id: int, pdf_path: str, source_id: str, filename: str = None,
                     original_filename: str = None, file_size: int = 0, content_type: str = "application/pdf",
                     upload_ip: str = None, user_agent: str = None):
@@ -173,6 +145,7 @@ class LetterService():
             upload_ip=upload_ip,
             user_agent=user_agent
         )
+    
 
     async def generate_by_url(self, job_url: str, source_id: int) -> str:
         """

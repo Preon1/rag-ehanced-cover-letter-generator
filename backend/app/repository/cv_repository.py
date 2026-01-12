@@ -30,7 +30,13 @@ class CVRepository:
         self.session.commit()
         self.session.refresh(cv)
         return cv
-
+    async def update_cv(self, cv: CV,data: dict) -> CV:
+        """Update an existing CV record"""
+        cv.sqlmodel_update(data)
+        self.session.add(cv)
+        await self.session.commit()
+        await self.session.refresh(cv)
+        return cv
     async def get_cv_by_source_id(self, source_id: int) -> Optional[CV]:
         """Get CV by source_id"""
         stmt = select(CV).where(CV.source_id == source_id)
@@ -66,3 +72,9 @@ class CVRepository:
             await self.session.commit()
             return True
         return False
+    def delete_cv(self, cv: CV):
+        """Delete CV record and return it for rollback if needed"""
+        if cv is not None:
+            self.session.delete(cv)
+            # self.session.flush()
+            return cv

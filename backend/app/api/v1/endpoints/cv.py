@@ -1,22 +1,75 @@
 import logging
 
-from fastapi import APIRouter, Depends, Request,HTTPException
+from fastapi import APIRouter, Depends, File, Request,HTTPException, UploadFile
 
 from app.api.v1.endpoints.user import get_cv_service
 from app.services.cv import CVService
-from app.services.user import UserService
-from app.api.v1.endpoints.user import get_user_service
-from backend.app.schemas.letter import GeneralResponse
-
+from app.schemas.letter import CVUploadResponse, GeneralResponse
+from app.helper.user import get_user_repository
+from app.repository.user_repository import UserRepository
+from validator.pdf import validate_pdf_and_get_path
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+@router.put("/{cv_id}")
+async def update_cv(
+    cv_id: int,
+    request: Request,
+    user_repo: UserRepository = Depends(get_user_repository),
+    file: UploadFile = File(..., description="PDF file containing the CV/resume"),
+    cv_service:CVService = Depends(get_cv_service)
+):
+    file_data = await validate_pdf_and_get_path(file)
+    
+    try:
+        user_email = request.state.user_email
+        current_user = _get_user_by_mail(user_email,user_repo)
+        await cv_service.update_cv(
+            cv_id=cv_id,
+            user_id=current_user.id,
+            pdf_path=file_data["temp_file_path"],
+            filename=file.filename,
+            original_filename=file.filename,
+            file_size=len(file_data["file_content"]),
+            content_type=file.content_type or "application/pdf"
+        )
+
+        return CVUploadResponse(
+            success=True,
+            message=f"CV updated successfully with id: {cv_id}",
+            source_id=cv_id,
+            data={
+                "filename": file.filename,
+                "file_size": len(file_data["file_content"]),
+                "source_id": cv_id
+            }
+        )
+    finally:
+        # Clean up temporary file
+        import os
+        if os.path.exists(file_data["temp_file_path"]):
+            os.unlink(file_data["temp_file_path"])
+
 
 @router.delete("/{cv_id}")
 async def delete_cv(
     cv_id: int,
     request: Request,
-    user_service:UserService = Depends(get_user_service),
     cv_service:CVService = Depends(get_cv_service)
     ):
-    pass
+    """Delete CV by id with rollback support."""
+    try:
+        await cv_service.delete_cv(cv_id)
+        return GeneralResponse(
+            success=True,
+            message=f"CV with id {cv_id} deleted successfully"
+        )
+    except Exception as e:
+        logging.error("Error retrieving CVs", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error retrieving CVs")  
+
+
+def _get_user_by_mail(email:str,user_repo: UserRepository):
+    current_user = user_repo.get_user_by_email(email)
+    return current_user

@@ -32,3 +32,39 @@ class QdrantStorage():
                 contexts.append(text)
                 sources.append(payload)
         return {"contexts":contexts, "sources":sources}
+    
+    def delete_by_source_id(self, source_id: int):
+        """Delete all points with given source_id"""
+        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        
+        self.client.delete(
+            collection_name=self.collection,
+            points_selector=Filter(
+                must=[
+                    FieldCondition(
+                        key="source_id",
+                        match=MatchValue(value=source_id)
+                    )
+                ]
+            )
+        )
+
+    def get_points_by_source_id(self, source_id: int):
+        """Get all points for potential rollback"""
+        from qdrant_client.models import Filter, FieldCondition, MatchValue
+        
+        results = self.client.scroll(
+            collection_name=self.collection,
+            scroll_filter=Filter(
+                must=[
+                    FieldCondition(
+                        key="source_id",
+                        match=MatchValue(value=source_id)
+                    )
+                ]
+            ),
+            limit=10000,
+            with_payload=True,
+            with_vectors=True
+        )
+        return results[0] 

@@ -21,14 +21,10 @@ class PdfService():
         self.session = session
         self.cv_repository = CVRepository(session) if session else None
 
-    async def add_cv(self, user_id: int, pdf_path: str, source_id: str, filename: str = None,
-                    original_filename: str = None, file_size: int = 0, content_type: str = "application/pdf",
-                    upload_ip: str = None, user_agent: str = None):
-        """Загружает CV в векторную БД и сохраняет метаданные в PostgreSQL"""
+    def upsert_vectors(self,pdf_path:str,original_filename: str,source_id:str,user_id:int):
+        """Embedding pdf файла и upsert в векторную БД."""
         text_chunks = self._load_and_chunk_pdf(pdf_path)
         vectors = self.embed_texts(text_chunks)
-
-        
         ids = [abs(hash(f"{original_filename}_{source_id}_{i+1}")) for i in range(len(text_chunks))]
         payloads = [
             {
@@ -40,8 +36,13 @@ class PdfService():
             }
             for i, chunk in enumerate(text_chunks)
         ]
-
         self.storage.upsert(ids=ids, vectors=vectors, payloads=payloads)
+
+    async def add_cv(self, user_id: int, pdf_path: str, source_id: str, filename: str = None,
+                    original_filename: str = None, file_size: int = 0, content_type: str = "application/pdf",
+                    upload_ip: str = None, user_agent: str = None):
+        """Загружает CV в векторную БД и сохраняет метаданные в PostgreSQL"""
+        self.upsert_vectors(pdf_path, original_filename or filename, source_id, user_id)
 
         # Save CV metadata to PostgreSQL if repository is available
         if self.cv_repository:
