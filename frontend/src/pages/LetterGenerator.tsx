@@ -84,7 +84,7 @@ const LetterGenerator: React.FC<LetterGeneratorProps> = ({ onBack }) => {
           mb={4}
           variant="outline"
         >
-          Мои резюме
+          My CVs
         </Button>
       )}
 

@@ -50,8 +50,16 @@ AI-powered cover letter generator using Retrieval-Augmented Generation (RAG) wit
 
 3. **Database Setup**
 
-   Start PostgreSQL: `docker-compose up -d postgres`
-   Run migrations: `uv run alembic upgrade head`
+   Start PostgreSQL and Qdrant:
+   ```bash
+   cd backend
+   make up
+   ```
+   
+   Run migrations:
+   ```bash
+   make alembic-upgrade
+   ```
 
 4. **Frontend Setup**
 
@@ -60,26 +68,57 @@ AI-powered cover letter generator using Retrieval-Augmented Generation (RAG) wit
 
    # Install dependencies
    npm install
-
-   # Start development server
-   npm run dev
    ```
 
-5. **Start Backend**
+## Running the Application
 
-   ```bash
-   cd backend
-   uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-   ```
+### Start Backend
+
+```bash
+cd backend
+make dev
+```
+
+This will start the FastAPI server on http://127.0.0.1:8000
+
+### Start Frontend
+
+```bash
+cd frontend
+npm run dev
+```
+
+This will start the React development server on http://localhost:5173
 
 ## API Endpoints
 
-### CV Management
-- `POST /api/v1/letter/upload-cv` - Upload resume PDF
+### Authentication (`/api/v1/auth`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/register` | Register a new user |
+| POST | `/login` | Login and get JWT tokens |
+| POST | `/refresh` | Refresh access token using refresh token |
+| GET | `/me` | Get current user information (requires auth) |
+| POST | `/logout` | Logout user |
 
-### Letter Generation
-- `POST /api/v1/letter/url` - Generate from job URL
-- `POST /api/v1/letter/text` - Generate from job title/description
+### CV Management (`/api/v1/cv`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| PUT | `/{cv_id}` | Update CV by ID (upload new PDF) |
+| DELETE | `/{cv_id}` | Delete CV by ID |
+
+### User CVs (`/api/v1/user`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/cvs` | Get all CVs for current user |
+| GET | `/cvs/options` | Get CV options (id/name pairs) for dropdowns |
+
+### Letter Generation (`/api/v1/letter`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/upload-cv` | Upload resume PDF to vector database |
+| POST | `/url` | Generate cover letter from job posting URL |
+| POST | `/text` | Generate cover letter from job title/description |
 
 ## Configuration
 
